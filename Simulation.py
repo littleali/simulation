@@ -43,30 +43,26 @@ class EventList:
 
 
 class Simulation:
-	def __init__(self , seed , duration  , elevator_lambda , service_lambda):
+	def __init__(self , seed , duration  , elevator_lambda , service_lambda , lambda_array):
 		# this queue contains the Feuture Event List and at first populate with arrival times
 		np.random.seed(seed)
 		self.ARRIVAL = "arrival"
 		self.DEPARTURE = "departure"
 		self.ELEVATOR_ARRIVAL = "elevatorArrival"
 		self.MAX_ELEVATOR_CAPACITY = 5
-		self.FEL = self.generateArrival(seed , duration )
+		self.FEL = self.generateArrival(seed , duration  , lambda_array)
 		self.simulate(seed , duration , elevator_lambda , service_lambda)
 
 
-	def generateArrival(self, seed , duration ):
+	def generateArrival(self, seed , duration  , lambda_array):
 		## generating random interArrivalTimes
 		elist = EventList()
+		interval = duration / len(lambda_array)
 		t = 0 
 		while t < duration:
-			if t < duration / 3 :
-				mu = 3
-			elif t < duration *2 / 3 :
-				mu = 4
-			else:
-				mu = 5
+			mu = lambda_array[int(t/interval)]
 			t = np.random.exponential(mu) + t
-			event = Event("arrival" , t)
+			event = Event(self.ARRIVAL , t)
 			elist.addEvent(event)
 		return elist
 
@@ -114,31 +110,32 @@ class Simulation:
 		systemTimes = []
 		waitingTimes = []
 		for i in range (len(departureTimes)):
-			print "result of " , i + 1 , " th person:"
+			# print "result of " , i + 1 , " th person:"
 			serviceTimes.append(departureTimes[i] - enterTimes[i])
-			print "serviceTime : " , serviceTimes[i]
+			# print "serviceTime : " , serviceTimes[i]
 			systemTimes.append(departureTimes[i] - arrivalTimes[i])
-			print "systemTime : " , systemTimes[i]
+			# print "systemTime : " , systemTimes[i]
 			waitingTimes.append(enterTimes[i] - arrivalTimes[i])
-			print "waitingTime : " , waitingTimes[i]
+			# print "waitingTime : " , waitingTimes[i]
+
+
+		# print "arrival times :" , arrivalTimes
+		# print "enter times :"  , enterTimes 
+		# print "departure times :"  , departureTimes
+		# print "waiting times :" , waitingTimes
+		# print "system times :" , systemTimes
+		# print "service times :" , serviceTimes
+
+		print "mean waiting times :" , np.mean(waitingTimes)
+		print "mean service times :" , np.mean(serviceTimes)
+		print "mean system times :" , np.mean(systemTimes)
 
 
 
-		print "arrival times :" , arrivalTimes
-		print "enter times :"  , enterTimes 
-		print "departure times :"  , departureTimes
-		print "waiting times :" , waitingTimes
-		print "system times :" , systemTimes
-		print "service times :" , serviceTimes
 
 
 
-
-
-
-
-
-simulation = Simulation(2 , 5  , 3 , 2)
+simulation = Simulation(3 , 50  , 30 , 50 , [10 , 7 , 5 , 9])
 
 
 
