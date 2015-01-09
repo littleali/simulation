@@ -18,4 +18,7 @@ def read_paramenter(paramenter_name):
 	cp = ConfigParser.ConfigParser()
 	cp.readfp(config)
 	return cp.get('all', paramenter_name)
+
+
+#test for read_parameter
 print read_paramenter("floors.parameter")
