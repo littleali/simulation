@@ -2,6 +2,9 @@ import numpy as np
 import StringIO
 import os
 import ConfigParser
+from time import gmtime, strftime
+import time
+
 
 def read_and_sort(filename):
 	unsorted_list = np.loadtxt(filename)
@@ -11,7 +14,7 @@ def read_and_sort(filename):
 		sorted_list[i] = sorted_list[i] - base
 	return sorted_list
 
-def read_paramenter(paramenter_name):
+def read_parameter(paramenter_name):
 	config = StringIO.StringIO()
 	config.write(open('config.properties').read())
 	config.seek(0, os.SEEK_SET)
@@ -19,6 +22,17 @@ def read_paramenter(paramenter_name):
 	cp.readfp(config)
 	return cp.get('all', paramenter_name)
 
+def log(string):
+    print time.strftime("%Y-%m-%d-%H-%M-%S", time.gmtime()) + ": " + str(string)
+
+
+
+
+
+
+
+
+
 
 #test for read_parameter
-print read_paramenter("floors.parameter")
+# print util.read_parameter("floors.parameter")

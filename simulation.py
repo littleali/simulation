@@ -1,32 +1,6 @@
 from Queue import PriorityQueue as pq
 import numpy as np
 
-class Event:
-	def __init__(self , eventType , time):
-		self.time = time
-		self.eventType = eventType
-	def getTime(self):
-		return self.time
-	def getType(self):
-		return self.eventType
-	def __cmp__(self, other):
-         return cmp(self.time, other.time)
-
-
-
-
-class EventList:
-	def __init__(self ):
-		self.event_queue = pq()
-
-	def addEvent(self , event):
-		self.event_queue.put(event)
-	def getMin(self):
-		return self.event_queue.get()
-	def hasNext(self):
-		return not self.event_queue.empty()
-	def getSize(self):
-		return self.event_queue.qsize()
 
 # =================
 # this code check correctness of Event and EventList
