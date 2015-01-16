@@ -32,30 +32,20 @@ class EventList:
 	def getSize(self):
 		return self.event_queue.qsize()
 
-# =================
-# this code check correctness of Event and EventList
-# =================
-# first = Event("arrival1" , 2.5)
-# second = Event("arrival" , 2.6)
-# elist = EventList()
-# elist.addEvent(second)
-# elist.addEvent(first)
-
-# while elist.hasNext():
-# 	print elist.getSize()
-# 	print elist.getMin().getType()
-
 
 class Simulation:
-	def __init__(self , seed , duration  ,  arrival_miu ,elevator_miu , elevator_sigma):
+	def __init__(self , seed , duration  ,  arrival_miu ,elevator_miu , elevator_sigma , elevator_num):
 		# this queue contains the Feuture Event List and at first populate with arrival times
+		elevator_free_times = [] 
+		for i in range(elevator_num):
+			elevator_free_times.append(0)
 		np.random.seed(seed)
 		self.ARRIVAL = "arrival"
 		self.DEPARTURE = "departure"
 		self.ELEVATOR_ARRIVAL = "elevatorArrival"
 		self.MAX_ELEVATOR_CAPACITY = 5
 		self.FEL = self.generateArrival(seed , duration , arrival_miu)
-		self.simulate(seed , duration , elevator_miu , arrival_miu , elevator_sigma)
+		self.simulate(seed , duration , elevator_miu , arrival_miu , elevator_sigma , elevator_free_times)
 
 
 	def generateArrival(self, seed , duration  , arrival):
@@ -76,7 +66,7 @@ class Simulation:
 		return elist
 
 
-	def simulate(self , seed , duration , elevator_miu  , arrival_miu , elevator_sigma):
+	def simulate(self , seed , duration , elevator_miu  , arrival_miu , elevator_sigma , elevator_free_times):
 		t = 0 
 		arrivalTimes = {}
 		enterTimes = {}
@@ -86,24 +76,50 @@ class Simulation:
 		while t < duration and self.FEL.hasNext():
 			event = self.FEL.getMin()
 			t = event.getTime()
+
+
+			################### ARRIVAL 
 			if event.getType() == self.ARRIVAL:
 				if not isKeyPressed:
-					time = 0 
+					time = t
+					index = 0
+					all_busy = True
+					first_free_time = elevator_free_times[0]
+					for idx ,  eft in enumerate(elevator_free_times):
+						# print " here in loop : " , eft  , " , " , idx  , " , " , t
+						if eft < t:
+							all_busy = False
+							index = idx
+							break
+						if eft <= first_free_time :
+							index = idx
+						first_free_time = min(eft , first_free_time)
+
+					if all_busy:
+					#	print " booogh "
+						time = first_free_time
+
 					while True:
 						temp = np.random.normal(elevator_miu , elevator_sigma)
 						if temp > elevator_miu - elevator_sigma:
-							time = t + temp
+							time = time + temp
 							break 
-					elevatorEvent = Event(self.ELEVATOR_ARRIVAL , time , -1 )
+					elevatorEvent = Event(self.ELEVATOR_ARRIVAL , time , index )
 					self.FEL.addEvent(elevatorEvent)
 				waitingQueue.addEvent(event)
 				arrivalTimes[event.getId()] = event.getTime()
 
+
+			################## DEPARTURE
 			elif event.getType() == self.DEPARTURE:
 				departureTimes[event.getId()] = event.getTime()
 
 
+
+			################## ELEVATOR ARRIVAL
+
 			elif event.getType() == self.ELEVATOR_ARRIVAL:
+				max_departure_time = 0 
 				for i in range( 0  , self.MAX_ELEVATOR_CAPACITY):
 					if waitingQueue.hasNext():
 						tmp = waitingQueue.getMin()
@@ -113,21 +129,41 @@ class Simulation:
 							if temp > elevator_miu - elevator_sigma:
 								time = t + temp
 								break 
+						max_departure_time = max(max_departure_time , time)
 						depEvent = Event(self.DEPARTURE , time  , tmp.getId())
 						self.FEL.addEvent(depEvent)
 						enterTimes[tmp.getId()] =  t
 						isKeyPressed = False
+			#	print "id , " , event.getId()
+				elevator_free_times[event.getId()] = max_departure_time
+
 				if waitingQueue.hasNext():
 					isKeyPressed = True
-					time = 0 
+					time = t
+					all_busy = True
+					index = 0
+					first_free_time = elevator_free_times[0]
+					for idx ,  eft in enumerate(elevator_free_times):
+						if eft < t:
+							all_busy = False
+							index = idx 
+							break
+						if eft <= first_free_time :
+							index = idx
+						first_free_time = min(eft , first_free_time)
+
+					if all_busy:
+					#	print " boooogh " , 
+						time = first_free_time
+				#	print "index , " , index
 					while True:
 						temp = np.random.normal(elevator_miu , elevator_sigma)
 						if temp > elevator_miu - elevator_sigma:
 							time = t + temp
 							break 
-					elevatorEvent = Event(self.ELEVATOR_ARRIVAL , time , -1)
+					elevatorEvent = Event(self.ELEVATOR_ARRIVAL , time , index)
 					self.FEL.addEvent(elevatorEvent)	
-
+	#	print elevator_free_times
 		self.printResult(arrivalTimes , enterTimes , departureTimes )
 
 
@@ -182,7 +218,7 @@ class Simulation:
 
 
 
-simulation = Simulation(2 , 50000  , [40 , 20 , 60] , 60 , 20)
+simulation = Simulation(2 , 50000  , [40 , 20 , 60] , 60 , 20 , 3)
 
 
 
