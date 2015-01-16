@@ -47,37 +47,36 @@ class EventList:
 
 
 class Simulation:
-	def __init__(self , seed , duration  , elevator_lambda , service_miu , elevator_sigma):
+	def __init__(self , seed , duration  ,  arrival_miu ,elevator_miu , elevator_sigma):
 		# this queue contains the Feuture Event List and at first populate with arrival times
 		np.random.seed(seed)
 		self.ARRIVAL = "arrival"
 		self.DEPARTURE = "departure"
 		self.ELEVATOR_ARRIVAL = "elevatorArrival"
 		self.MAX_ELEVATOR_CAPACITY = 5
-		self.FEL = self.generateArrival(seed , duration )
-		self.simulate(seed , duration , elevator_lambda , service_miu , elevator_sigma)
+		self.FEL = self.generateArrival(seed , duration , arrival_miu)
+		self.simulate(seed , duration , elevator_miu , arrival_miu , elevator_sigma)
 
 
-	def generateArrival(self, seed , duration ):
+	def generateArrival(self, seed , duration  , arrival):
 		## generating random interArrivalTimes
 		elist = EventList()
 		t = 0 
 		counter = 0
-		while t < duration:
-			if t < duration / 3 :
-				mu = 5
-			elif t < duration *2 / 3 :
-				mu = 20
-			else:
-				mu = 5
-			t = np.random.exponential(mu) + t
-			counter += 1
-			event = Event("arrival" , t , counter)
-			elist.addEvent(event)
+		batch = duration / len(arrival)
+		top = 0 
+		for i in range( len(arrival)):
+			while t < top + batch:
+				mu = arrival[i]
+				t = np.random.exponential(mu) + t
+				counter += 1
+				event = Event("arrival" , t , counter)
+				elist.addEvent(event)
+			top = top + duration
 		return elist
 
 
-	def simulate(self , seed , duration , elevator_lambda  , service_miu , elevator_sigma):
+	def simulate(self , seed , duration , elevator_miu  , arrival_miu , elevator_sigma):
 		t = 0 
 		arrivalTimes = {}
 		enterTimes = {}
@@ -91,8 +90,8 @@ class Simulation:
 				if not isKeyPressed:
 					time = 0 
 					while True:
-						temp = np.random.normal(elevator_lambda , elevator_sigma)
-						if temp > elevator_lambda - elevator_sigma:
+						temp = np.random.normal(elevator_miu , elevator_sigma)
+						if temp > elevator_miu - elevator_sigma:
 							time = t + temp
 							break 
 					elevatorEvent = Event(self.ELEVATOR_ARRIVAL , time , -1 )
@@ -110,8 +109,8 @@ class Simulation:
 						tmp = waitingQueue.getMin()
 						time = 0 
 						while True:
-							temp = np.random.normal(elevator_lambda , elevator_sigma)
-							if temp > elevator_lambda - elevator_sigma:
+							temp = np.random.normal(elevator_miu , elevator_sigma)
+							if temp > elevator_miu - elevator_sigma:
 								time = t + temp
 								break 
 						depEvent = Event(self.DEPARTURE , time  , tmp.getId())
@@ -120,7 +119,13 @@ class Simulation:
 						isKeyPressed = False
 				if waitingQueue.hasNext():
 					isKeyPressed = True
-					elevatorEvent = Event(self.ELEVATOR_ARRIVAL , t + np.random.exponential(service_miu) , -1)
+					time = 0 
+					while True:
+						temp = np.random.normal(elevator_miu , elevator_sigma)
+						if temp > elevator_miu - elevator_sigma:
+							time = t + temp
+							break 
+					elevatorEvent = Event(self.ELEVATOR_ARRIVAL , time , -1)
 					self.FEL.addEvent(elevatorEvent)	
 
 		self.printResult(arrivalTimes , enterTimes , departureTimes )
@@ -136,9 +141,6 @@ class Simulation:
 		min_waiting_time = 1000000
 		min_service_time = 1000000
 		min_system_time = 1000000
-		print "len departure: " , len(departureTimes)
-		print "len enter: " , len(enterTimes)
-		print "len waitingTimes" , len(arrivalTimes)
 		for i in range (1 , len(departureTimes)):
 			# print "result of " , i + 1 , " th person:"
 			if i in departureTimes and i in enterTimes and i in arrivalTimes:
@@ -180,7 +182,7 @@ class Simulation:
 
 
 
-simulation = Simulation(2 , 50000  , 60 , 40 , 20)
+simulation = Simulation(2 , 50000  , [40 , 20 , 60] , 60 , 20)
 
 
 
