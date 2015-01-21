@@ -5,10 +5,18 @@ import math
 NUMBER_OF_ELEVATOR = 3
 CAPACITY_OF_EACH_ELEVATOR = 5
 DURATION_OF_SIMULATION_IN_SECONDS = 50000
-ARRIVAL_RATE_COLLECTION= [40 , 20 , 60]
-MEAN_SERVICE_TIME = 60
-MIN_SERVICE_TIME = 20
-VARIANCE_OF_SERVICE_TIME = 20
+ARRIVAL_RATE_COLLECTION= [70.33 , 46.82 , 30.96]
+MEAN_SERVICE_TIME = 31
+MIN_SERVICE_TIME = 7
+MAX_SERVICE_TIME = 140
+SIGMA_SERVICE_TIME = 34.7
+
+MEAN_WAITING_TIME = 23.84
+MIN_WAITING_TIME = 0
+MAX_WAITING_TIME = 103
+SIGMA_WAITING_TIME = 25.68
+
+NUMBER_OF_REPLICATION = 15
 
 
 
@@ -53,7 +61,7 @@ avg_service_time = []
 
 
 class Simulation:
-	def __init__(self ,  duration  ,  arrival_miu ,elevator_miu , elevator_sigma , elevator_num):
+	def __init__(self ,  duration  ,  arrival_miu  ,  elevator_num):
 		# this queue contains the Feuture Event List and at first populate with arrival times
 		elevator_free_times = [] 
 		for i in range(elevator_num):
@@ -63,7 +71,7 @@ class Simulation:
 		self.ELEVATOR_ARRIVAL = "elevatorArrival"
 		self.MAX_ELEVATOR_CAPACITY = CAPACITY_OF_EACH_ELEVATOR
 		self.FEL = self.generateArrival(duration , arrival_miu)
-		self.simulate(duration , elevator_miu , arrival_miu , elevator_sigma , elevator_free_times)
+		self.simulate(duration  ,  elevator_free_times)
 
 
 	def generateArrival( seed , duration  , arrival):
@@ -84,7 +92,7 @@ class Simulation:
 		return elist
 
 
-	def simulate(self ,duration , elevator_miu  , arrival_miu , elevator_sigma , elevator_free_times):
+	def simulate(self ,duration   , elevator_free_times):
 		t = 0 
 		arrivalTimes = {}
 		enterTimes = {}
@@ -114,8 +122,8 @@ class Simulation:
 						time = first_free_time
 
 					while True:
-						temp = np.random.normal(elevator_miu , elevator_sigma)
-						if temp > elevator_miu - MIN_SERVICE_TIME:
+						temp = np.random.normal(MEAN_WAITING_TIME , SIGMA_WAITING_TIME)
+						if temp > MIN_WAITING_TIME and temp < MAX_WAITING_TIME :
 							time = time + temp
 							break 
 					elevatorEvent = Event(self.ELEVATOR_ARRIVAL , time , index )
@@ -139,8 +147,8 @@ class Simulation:
 						tmp = waitingQueue.getMin()
 						time = 0 
 						while True:
-							temp = np.random.normal(elevator_miu , elevator_sigma)
-							if temp > elevator_miu - elevator_sigma:
+							temp = np.random.normal(MEAN_SERVICE_TIME , SIGMA_SERVICE_TIME)
+							if temp > MIN_SERVICE_TIME and temp < MAX_SERVICE_TIME:
 								time = t + temp
 								break 
 						max_departure_time = max(max_departure_time , time)
@@ -169,8 +177,8 @@ class Simulation:
 						time = first_free_time
 
 					while True:
-						temp = np.random.normal(elevator_miu , elevator_sigma)
-						if temp > elevator_miu - MIN_SERVICE_TIME:
+						temp = np.random.normal(MEAN_WAITING_TIME , SIGMA_WAITING_TIME)
+						if temp > MIN_WAITING_TIME and temp < MAX_WAITING_TIME:
 							time = t + temp
 							break 
 					elevatorEvent = Event(self.ELEVATOR_ARRIVAL , time , index)
@@ -233,10 +241,10 @@ class Simulation:
 
 
 
-for i in range(15) :
+for i in range(NUMBER_OF_REPLICATION) :
 	print "<<<<<<<<<<<<<<<<<<<<<<<<<<<" ,i + 1 , "th simulation results", ">>>>>>>>>>>>>>>>>>>>>>>>>>>"
 	simulation = Simulation(DURATION_OF_SIMULATION_IN_SECONDS  , ARRIVAL_RATE_COLLECTION 
-		, MEAN_SERVICE_TIME , VARIANCE_OF_SERVICE_TIME , NUMBER_OF_ELEVATOR)
+		 , NUMBER_OF_ELEVATOR)
 
 print "<<<<<<<<<<<<<<<<<<<<<<<<<<<" , "total results", ">>>>>>>>>>>>>>>>>>>>>>>>>>>"
 
@@ -245,9 +253,9 @@ print "\t\tTotal mean system times :" , np.mean(avg_system_time)
 print "\t\tTotal mean service times :" , np.mean(avg_service_time)
 
 
-print "######## Total mean waiting times standad error is : ########" , math.sqrt(np.var(avg_waiting_time))
-print "######## Total mean system times standard error is : ########" , math.sqrt(np.var(avg_system_time))
-print "######## Total mean service times standard error is : ########" , math.sqrt(np.var(avg_service_time))
+print "######## Total mean waiting times standad error is : ########" , math.sqrt(np.var(avg_waiting_time))/(NUMBER_OF_ELEVATOR - 1)
+print "######## Total mean system times standard error is : ########" , math.sqrt(np.var(avg_system_time))/(NUMBER_OF_REPLICATION - 1)
+print "######## Total mean service times standard error is : ########" , math.sqrt(np.var(avg_service_time))/(NUMBER_OF_REPLICATION -1)
 
 
 
