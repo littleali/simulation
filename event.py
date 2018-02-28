@@ -12,6 +12,10 @@ class Event:
 	def getDestination(self):
 		return self.destination
 
+
+
+
+
 	def getId(self):
 		return self.id
 
